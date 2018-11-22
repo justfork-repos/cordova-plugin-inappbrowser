@@ -111,6 +111,7 @@ public class InAppBrowser extends CordovaPlugin {
     private static final String FOOTER = "footer";
     private static final String FOOTER_COLOR = "footercolor";
     private static final String BEFORELOAD = "beforeload";
+    private static final String TITLE = "title";
 
     private static final List customizableOptions = Arrays.asList(CLOSE_BUTTON_CAPTION, TOOLBAR_COLOR, NAVIGATION_COLOR, CLOSE_BUTTON_COLOR, FOOTER_COLOR);
 
@@ -141,6 +142,7 @@ public class InAppBrowser extends CordovaPlugin {
     private String footerColor = "";
     private boolean useBeforeload = false;
     private String[] allowedSchemes;
+    private String title;
 
     /**
      * Executes the request and returns PluginResult.
@@ -250,7 +252,7 @@ public class InAppBrowser extends CordovaPlugin {
         }
         else if (action.equals("loadAfterBeforeload")) {
             if (!useBeforeload) {
-              LOG.e(LOG_TAG, "unexpected loadAfterBeforeload called without feature beforeload=yes");
+                LOG.e(LOG_TAG, "unexpected loadAfterBeforeload called without feature beforeload=yes");
             }
             final String url = args.getString(0);
             this.cordova.getActivity().runOnUiThread(new Runnable() {
@@ -694,6 +696,8 @@ public class InAppBrowser extends CordovaPlugin {
             if (beforeload != null) {
                 useBeforeload = beforeload.equals("yes") ? true : false;
             }
+
+            title = features.get(TITLE);
         }
 
         final CordovaWebView thatWebView = this.webView;
@@ -769,8 +773,12 @@ public class InAppBrowser extends CordovaPlugin {
                     dialog.dismiss();
                 };
 
+                // allow custom style resource to colour the toolbar / statusbar
+                final String resourceName = preferences.getString("InAppBrowserAndroidStyleResource", "");
+                int theme = resourceName.equals("") ?  android.R.style.Theme_NoTitleBar : cordova.getActivity().getResources().getIdentifier(resourceName, "style", webView.getContext().getPackageName());
                 // Let's create the main dialog
-                dialog = new InAppBrowserDialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
+
+                dialog = new InAppBrowserDialog(cordova.getActivity(), theme);
                 dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 dialog.setCancelable(true);
@@ -872,6 +880,16 @@ public class InAppBrowser extends CordovaPlugin {
                     }
                 });
 
+                // Edit Text Box
+                TextView titleView = new TextView(cordova.getActivity());
+                RelativeLayout.LayoutParams titleTextLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+                titleTextLayoutParams.addRule(RelativeLayout.RIGHT_OF, 1);
+                titleTextLayoutParams.addRule(RelativeLayout.LEFT_OF, 5);
+                titleView.setLayoutParams(textLayoutParams);
+                titleView.setId(Integer.valueOf(4));
+                titleView.setSingleLine(true);
+                titleView.setText(title);
+                titleView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
                 // Header Close/Done button
                 View close = createCloseButton(5);
@@ -1000,7 +1018,11 @@ public class InAppBrowser extends CordovaPlugin {
 
                 // Add the views to our toolbar if they haven't been disabled
                 if (!hideNavigationButtons) toolbar.addView(actionButtonContainer);
-                if (!hideUrlBar) toolbar.addView(edittext);
+                if (title != null) {
+                    toolbar.addView(titleView);
+                } else if (!hideUrlBar) {
+                    toolbar.addView(edittext);
+                }
 
                 // Don't add the toolbar if its been disabled
                 if (getShowLocationBar()) {
@@ -1018,14 +1040,9 @@ public class InAppBrowser extends CordovaPlugin {
                     webViewLayout.addView(footer);
                 }
 
-                WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-                lp.copyFrom(dialog.getWindow().getAttributes());
-                lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-                lp.height = WindowManager.LayoutParams.MATCH_PARENT;
-
                 dialog.setContentView(main);
                 dialog.show();
-                dialog.getWindow().setAttributes(lp);
+
                 // the goal of openhidden is to load the url and not display it
                 // Show() needs to be called to cause the URL to be loaded
                 if(openWindowHidden) {
