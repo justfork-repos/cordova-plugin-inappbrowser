@@ -780,6 +780,7 @@ public class InAppBrowser extends CordovaPlugin {
 
                 dialog = new InAppBrowserDialog(cordova.getActivity(), theme);
                 dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
+                dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
                 dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
                 dialog.setCancelable(true);
                 dialog.setInAppBroswer(getInAppBrowser());
