@@ -628,13 +628,23 @@ static CDVUIInAppBrowser* instance = nil;
     UIBarButtonItem* fixedSpaceButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
     fixedSpaceButton.width = 20;
 
-    // if we want to set colors
-//    if (_browserOptions.toolbarcolor != nil) { // Set toolbar color if user sets it in options
-//        self.toolbar.barTintColor = [self colorFromHexString:_browserOptions.toolbarcolor];
-//    }
-//    if (!_browserOptions.toolbartranslucent) { // Set toolbar translucent to no if user sets it in options
-//        self.toolbar.translucent = NO;
-//    }
+    // sets navigation bar colours
+    [UINavigationBar appearance].translucent = NO;
+    if (_browserOptions.toolbarcolor != nil) {
+        [UINavigationBar appearance].barTintColor = [self colorFromHexString:_browserOptions.toolbarcolor];
+    }
+    if (_browserOptions.navigationbuttoncolor != nil) {
+        [UINavigationBar appearance].tintColor = [self colorFromHexString:_browserOptions.navigationbuttoncolor];
+        [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName :  [self colorFromHexString:_browserOptions.navigationbuttoncolor]}];
+    }
+
+    // toolbar is disabled on this branch, below was for setting toolbar colours if enabled
+    //    if (_browserOptions.toolbarcolor != nil) { // Set toolbar color if user sets it in options
+    //        self.toolbar.barTintColor = [self colorFromHexString:_browserOptions.toolbarcolor];
+    //    }
+    //    if (!_browserOptions.toolbartranslucent) { // Set toolbar translucent to no if user sets it in options
+    //        self.toolbar.translucent = NO;
+    //    }
     
     NSString* frontArrowString = NSLocalizedString(@"►", nil); // create arrow from Unicode char
     self.forwardButton = [[UIBarButtonItem alloc] initWithTitle:frontArrowString style:UIBarButtonItemStylePlain target:self action:@selector(goForward:)];
